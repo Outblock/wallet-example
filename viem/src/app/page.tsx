@@ -14,6 +14,40 @@ const WalletConnect = () => {
   const [message, setMessage] = useState('');
   const [signature, setSignature] = useState('');
   const [flowWalletProvider, setFlowWalletProvider] = useState(null)
+  const [signTypeSig, setSignTypeSig] = useState('');
+
+  // EIP-712 Typed Data
+  const domain = {
+    name: 'Ether Mail',
+    version: '1',
+    chainId: 1,
+    verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC',
+  } as const;
+
+  const types = {
+    Person: [
+      { name: 'name', type: 'string' },
+      { name: 'wallet', type: 'address' },
+    ],
+    Mail: [
+      { name: 'from', type: 'Person' },
+      { name: 'to', type: 'Person' },
+      { name: 'contents', type: 'string' },
+    ],
+  } as const;
+
+  const typeMsg = {
+    from: {
+      name: 'Cow',
+      wallet: '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826',
+    },
+    to: {
+      name: 'Bob',
+      wallet: '0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB',
+    },
+    contents: 'Hello, Bob!',
+  } as const;
+
 
   const setupEventListeners = () => {
     // 监听钱包公告事件
@@ -35,11 +69,31 @@ const WalletConnect = () => {
     setupEventListeners()
   }, [])
 
-  
+
   const publicClient = createPublicClient({
     chain: flowMainnet,
     transport: http()
   })
+
+  const signTypeData = async () => {
+    try {
+      const client = createWalletClient({
+        chain: flowMainnet,
+        //@ts-ignore
+        transport: custom(flowWalletProvider)
+      })
+      const signature = await client.signTypedData({ account: account as `0x${string}`, domain, types, primaryType: 'Mail', message: typeMsg });
+      setSignTypeSig(signature);
+      setError('');
+      return signature;
+    } catch (err: any) {
+      setError('Sign typed data failed:' + err.message);
+      return {
+        success: false,
+        error: err.message
+      };
+    }
+  }
 
 
 
@@ -176,6 +230,13 @@ const WalletConnect = () => {
             </button>
             <br />
             <p>Signature: {JSON.stringify(signature)}</p>
+          </div>
+          <div>
+            <button onClick={() => signTypeData()}>
+              Sign type data
+            </button>
+            <br />
+            <p>Signature: {JSON.stringify(signTypeSig)}</p>
           </div>
         </div>
       )}

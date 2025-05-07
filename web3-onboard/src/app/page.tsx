@@ -17,6 +17,48 @@ const WalletConnect = () => {
   const [signature, setSignature] = useState(null);
   const [provider, setProvider] = useState<any>(null)
   const [flowWalletProvider, setFlowWalletProvider] = useState(null)
+  const [signTypeSig, setSignTypeSig] = useState('');
+
+  
+  const types = {
+    Person: [
+      { name: 'name', type: 'string' },
+      { name: 'wallet', type: 'address' },
+    ],
+    Mail: [
+      { name: 'from', type: 'Person' },
+      { name: 'to', type: 'Person' },
+      { name: 'contents', type: 'string' },
+    ],
+  }
+
+  const domain = {
+    name: 'Ether Mail',
+    version: '1',
+    chainId: 747,
+    verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC',
+  } as const
+
+  const typeMsg = {
+    from: {
+      name: 'Cow',
+      wallet: '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826',
+    },
+    to: {
+      name: 'Bob',
+      wallet: '0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB',
+    },
+    contents: 'Hello, Bob!',
+  }
+
+  const typedData = {
+    types,
+    domain,
+    primaryType: "Mail",
+    message
+  }
+
+
 
   const setupEventListeners = () => {
     // 监听钱包公告事件
@@ -91,7 +133,22 @@ const WalletConnect = () => {
 
 
 
-
+  const signTypeData = async () => {
+    try {
+      const signer = await provider.getSigner();
+      // Ethers.js uses `signTypedData` for EIP-712 signing
+      const signature = await signer.signTypedData(domain, types, typeMsg);
+      setSignTypeSig(signature);
+      setError('');
+      return signature;
+    } catch (err: any) {
+      setError('Sign typed data failed:' + err.message);
+      return {
+        success: false,
+        error: err.message
+      };
+    }
+  }
 
   // send transaction
   const sendTransaction = async (to: string, amount: string) => {
@@ -163,6 +220,13 @@ const WalletConnect = () => {
             </button>
             <br />
             <p>Signature: {JSON.stringify(signature)}</p>
+          </div>
+          <div>
+            <button onClick={() => signTypeData()}>
+              Sign type data
+            </button>
+            <br />
+            <p>Signature: {JSON.stringify(signTypeSig)}</p>
           </div>
         </div>
       )}

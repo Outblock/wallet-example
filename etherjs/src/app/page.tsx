@@ -9,6 +9,8 @@ const WalletConnect = () => {
   const [error, setError] = useState('');
   const [toAddress, setToAddress] = useState('');
   const [selectedNetwork, setSelectedNetwork] = useState('');
+  const [signTypeSig, setSignTypeSig] = useState('');
+
   const [message, setMessage] = useState('');
   const [signature, setSignature] = useState('');
   const [providers, setProviders] = useState({} as any);
@@ -22,6 +24,64 @@ const WalletConnect = () => {
     // }
     return true;
   };
+
+
+  const types = {
+    Person: [
+      { name: 'name', type: 'string' },
+      { name: 'wallet', type: 'address' },
+    ],
+    Mail: [
+      { name: 'from', type: 'Person' },
+      { name: 'to', type: 'Person' },
+      { name: 'contents', type: 'string' },
+    ],
+  }
+
+  const domain = {
+    name: 'Ether Mail',
+    version: '1',
+    chainId: 747,
+    verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC',
+  } as const
+
+  const typeMsg = {
+    from: {
+      name: 'Cow',
+      wallet: '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826',
+    },
+    to: {
+      name: 'Bob',
+      wallet: '0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB',
+    },
+    contents: 'Hello, Bob!',
+  }
+
+  const typedData = {
+    types,
+    domain,
+    primaryType: "Mail",
+    message
+  }
+
+  const signTypeData = async () => {
+    try {
+      //@ts-ignore
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      // Ethers.js uses `signTypedData` for EIP-712 signing
+      const signature = await signer.signTypedData(domain, types, typeMsg);
+      setSignTypeSig(signature);
+      setError('');
+      return signature;
+    } catch (err: any) {
+      setError('Sign typed data failed:' + err.message);
+      return {
+        success: false,
+        error: err.message
+      };
+    }
+  }
 
   const setupEventListeners = () => {
     // 监听钱包公告事件
@@ -77,7 +137,7 @@ const WalletConnect = () => {
   // connect wallet
   const connectWallet = async () => {
     try {
-      if (!checkIfWalletIsInstalled()) return;
+      if (!checkIfWalletIsInstalled() || flowWalletProvider == null) return;
       //@ts-ignore
       const accounts = await flowWalletProvider.request({
         method: 'eth_requestAccounts'
@@ -187,6 +247,13 @@ const WalletConnect = () => {
             </button>
             <br />
             <p>Signature: {JSON.stringify(signature)}</p>
+          </div>
+          <div>
+            <button onClick={() => signTypeData()}>
+              Sign type data
+            </button>
+            <br />
+            <p>Signature: {JSON.stringify(signTypeSig)}</p>
           </div>
         </div>
       )}

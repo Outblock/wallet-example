@@ -12,6 +12,47 @@ const WalletConnect = () => {
   const [message, setMessage] = useState('');
   const [signature, setSignature] = useState('');
   const [flowWalletProvider, setFlowWalletProvider] = useState(null)
+  const [signTypeSig, setSignTypeSig] = useState('');
+
+
+  const types = {
+    Person: [
+      { name: 'name', type: 'string' },
+      { name: 'wallet', type: 'address' },
+    ],
+    Mail: [
+      { name: 'from', type: 'Person' },
+      { name: 'to', type: 'Person' },
+      { name: 'contents', type: 'string' },
+    ],
+  }
+
+  const domain = {
+    name: 'Ether Mail',
+    version: '1',
+    chainId: 747,
+    verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC',
+  } as const
+
+  const typeMsg = {
+    from: {
+      name: 'Cow',
+      wallet: '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826',
+    },
+    to: {
+      name: 'Bob',
+      wallet: '0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB',
+    },
+    contents: 'Hello, Bob!',
+  }
+
+  const typedData = {
+    types,
+    domain,
+    primaryType: "Mail",
+    message
+  }
+
 
   const setupEventListeners = () => {
     // 监听钱包公告事件
@@ -111,7 +152,6 @@ const WalletConnect = () => {
 
       //@ts-ignore
       const web3 = new Web3(flowWalletProvider);
-
       //@ts-ignore
       await flowWalletProvider.request({ method: 'eth_requestAccounts' });
       const accounts = await web3.eth.getAccounts();
@@ -129,6 +169,45 @@ const WalletConnect = () => {
       setError('Connect wallet failed:' + err.message);
     }
   };
+
+  const signTypeData = async () => {
+    try {
+      if (!flowWalletProvider || !account || !chainId) {
+        setError('Wallet not connected or chainId not available');
+        return;
+      }
+
+      const currentChainId = parseInt(chainId, 747);
+      const messageDomain = {
+        ...domain,
+        chainId: currentChainId, // Ensure chainId is a number
+      };
+
+      const eip712Payload = {
+        types: types,
+        primaryType: 'Mail',
+        domain: messageDomain,
+        message: typeMsg,
+      };
+
+      //@ts-ignore
+      const signature = await flowWalletProvider.request({
+        method: 'eth_signTypedData_v4',
+        params: [account, JSON.stringify(eip712Payload)],
+      });
+
+      setSignTypeSig(signature);
+      setError('');
+      return signature;
+    } catch (err: any) {
+      console.error('Sign typed data error:', err);
+      setError('Sign typed data failed: ' + err.message);
+      return {
+        success: false,
+        error: err.message,
+      };
+    }
+  }
 
 
   // send transaction
@@ -241,6 +320,13 @@ const WalletConnect = () => {
             </button>
             <br />
             <p>Signature: {JSON.stringify(signature)}</p>
+          </div>
+          <div>
+            <button onClick={() => signTypeData()}>
+              Sign type data
+            </button>
+            <br />
+            <p>Signature: {JSON.stringify(signTypeSig)}</p>
           </div>
         </div>
       )}
