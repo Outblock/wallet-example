@@ -29,7 +29,7 @@ const WalletConnect = () => {
 
 ## Send Transaction
 
-```javascript
+```ts
 // page.tsx
 const sendTransaction = async (to: string, value: string) => {
   try {
@@ -57,7 +57,7 @@ const sendTransaction = async (to: string, value: string) => {
 
 ## Sign Message
 
-```javascript
+```ts
 // page.tsx
 const signMessage = async (message: string) => {
   try {
@@ -82,7 +82,7 @@ const signMessage = async (message: string) => {
 
 ## Sign Typed Data (EIP-712)
 
-```javascript
+```ts
 // page.tsx
 const signTypeData = async () => {
   try {
@@ -103,5 +103,3 @@ const signTypeData = async () => {
   }
 }
 ```
-
-//
