@@ -120,11 +120,8 @@ const WalletConnect = () => {
     try {
       const signer = await provider.getSigner()
 
-      // 签名消息
       const signature = await signer.signMessage(message);
       setSignature(signature);
-
-
 
       return signature
     } catch (error: any) {

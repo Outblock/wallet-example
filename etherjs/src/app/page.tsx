@@ -8,7 +8,6 @@ const WalletConnect = () => {
   const [chainId, setChainId] = useState('');
   const [error, setError] = useState('');
   const [toAddress, setToAddress] = useState('');
-  const [selectedNetwork, setSelectedNetwork] = useState('');
   const [signTypeSig, setSignTypeSig] = useState('');
 
   const [message, setMessage] = useState('');

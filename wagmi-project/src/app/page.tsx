@@ -1,7 +1,8 @@
 'use client'
 
-import { useAccount, useConnect, useDisconnect, useSignMessage, useSignTypedData } from 'wagmi'
+import { useAccount, useConnect, useDisconnect, useSignMessage, useSignTypedData, useSendTransaction } from 'wagmi'
 import { signMessage, getAccount, verifyMessage, verifyTypedData } from '@wagmi/core'
+import { parseEther } from 'viem'
 import { getConfig } from '../wagmi'
 import { useState } from 'react'
 
@@ -12,6 +13,8 @@ function App() {
   const { disconnect } = useDisconnect()
   const { signMessageAsync } = useSignMessage()
   const { signTypedDataAsync } = useSignTypedData()
+  const { sendTransactionAsync } = useSendTransaction()
+  const [toAddress, setToAddress] = useState('');
 
 
   const [result, setResult] = useState('')
@@ -61,12 +64,7 @@ function App() {
     }
     try {
       const signature = await signTypedDataAsync({
-        domain: {
-          name: 'Ether Mail',
-          version: '1',
-          chainId: account.chainId ?? 1,
-          verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC',
-        },
+        domain,
         types,
         primaryType: 'Mail',
         message
@@ -98,22 +96,25 @@ function App() {
     }
   };
 
-  // const signTypeData = async () => {
-  //   try {
-  //     const signer = await provider.getSigner();
-  //     // Ethers.js uses `signTypedData` for EIP-712 signing
-  //     const signature = await signer.signTypedData(domain, types, typeMsg);
-  //     setSignTypeSig(signature);
-  //     setErrorMsg('');
-  //     return signature;
-  //   } catch (err: any) {
-  //     setErrorMsg('Sign typed data failed:' + err.message);
-  //     return {
-  //       success: false,
-  //       error: err.message
-  //     };
-  //   }
-  // }
+
+  // send transaction
+  const handleSendTransaction = async (to: string, amount: string) => {
+    if (!sendTransactionAsync) {
+      setErrorMsg('Send transaction function is not available.');
+      return;
+    }
+    try {
+      const hash = await sendTransactionAsync({
+        to: to as `0x${string}`,
+        value: parseEther(amount)
+      })
+      console.log('hash ==>', hash)
+      return hash
+
+    } catch (err: any) {
+      setErrorMsg('Send transaction failed: ' + err.message);
+    }
+  };
 
   const sign = async () => {
     const msgString = `By connecting your wallet and using Mintify, you agree to our Terms of Service and Privacy Policy. \n\nMintify Connect`;
@@ -163,6 +164,14 @@ function App() {
         ))}
         <div>{status}</div>
         <div>{error?.message}</div>
+        <div>
+          <input type="text" placeholder="Enter the recipient address" onChange={e => setToAddress(e.target.value)} />
+          <br />
+          <button onClick={() => handleSendTransaction(toAddress, '0.01')}>
+            send 0.01 FLOW to {toAddress}
+          </button>
+        </div>
+        <br />
         <button onClick={sign}>Sign Message</button>
         <div>{result}</div>
 

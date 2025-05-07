@@ -42,3 +42,4 @@ const Home: NextPage = () => {
 ```
 
 
+see docs [here](https://github.com/Outblock/wallet-example/blob/main/wagmi-project/README.md) 
