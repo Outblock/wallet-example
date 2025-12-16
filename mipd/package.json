@@ -12,7 +12,7 @@
     "@tanstack/react-query": "5.45.1",
     "ethers": "^6.13.5",
     "mipd": "^0.0.7",
-    "next": "14.2.4",
+    "next": "14.2.35",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
